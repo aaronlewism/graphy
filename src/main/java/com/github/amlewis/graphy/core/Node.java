@@ -130,13 +130,13 @@ public abstract class Node<ResultType> {
     }
   }
 
-  public class NodeNotProcessedException extends RuntimeException {
+  public static class NodeNotProcessedException extends RuntimeException {
     public NodeNotProcessedException(String message) {
       super(message);
     }
   }
 
-  public class NodeProcessingException extends RuntimeException {
+  public static class NodeProcessingException extends RuntimeException {
     public NodeProcessingException(String message, Throwable cause) {
       super(message, cause);
     }
