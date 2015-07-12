@@ -1,8 +1,10 @@
 package com.github.amlewis.graphy.core;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RunnableFuture;
@@ -12,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/10/15.
  */
 public abstract class Node<ResultType> {
+  private final List<WeakReference<Node<?>>> parents = new LinkedList<>();
   private final List<Node<?>> dependencies = new LinkedList<>();
   private NodeResult<ResultType> result = null;
 
@@ -25,26 +28,32 @@ public abstract class Node<ResultType> {
     this.dependencies.addAll(dependencies);
   }
 
-  public ResultType get() {
-    if (result == null) {
-      throw new NodeNotProcessedException("Node hasn't completed processing!");
-    }
+  private AtomicBoolean isActive = new AtomicBoolean(false);
 
-    if (result.isException()) {
-      throw new NodeProcessingException("Node resulted in an exception!", result.getException());
-    }
-
-    return result.getResult();
+  public void activate() {
+    activate(null);
   }
 
-  private AtomicBoolean isUpdating = new AtomicBoolean(false);
-  private AtomicBoolean needsUpdating = new AtomicBoolean(false);
+  void activate(Node<?> parent) {
+    if (parent != null) {
+      parents.add(new WeakReference<Node<?>>(parent));
+    }
+    if (isActive.compareAndSet(false, true)) {
+      for (Node<?> dependency : dependencies) {
+        dependency.activate(this);
+      }
+    }
+  }
+
+  private boolean isUpdating = false;
+  private boolean needsUpdating = false;
 
   void update() {
     boolean shouldStartThread;
     synchronized (updateNodeRunnable) {
-      needsUpdating.set(true);
-      shouldStartThread = isUpdating.compareAndSet(false, true);
+      needsUpdating = true;
+      shouldStartThread = !isUpdating;
+      isUpdating = true;
     }
 
     if (shouldStartThread) {
@@ -57,10 +66,11 @@ public abstract class Node<ResultType> {
     public void run() {
       while (true) {
         synchronized (updateNodeRunnable) {
-          if (!needsUpdating.compareAndSet(true, false)) {
-            isUpdating.set(false);
+          if (!needsUpdating) {
+            isUpdating = false;
             return;
           }
+          needsUpdating = false;
         }
 
         ResultType processResult = null;
@@ -78,7 +88,6 @@ public abstract class Node<ResultType> {
           setResult(processResult);
         }
       }
-
     }
   };
 
@@ -94,11 +103,59 @@ public abstract class Node<ResultType> {
     return result != null;
   }
 
+  public boolean isSuccess() {
+    NodeResult<ResultType> result = this.result;
+    return result != null && !result.isException();
+  }
+
+  public boolean isException() {
+    NodeResult<ResultType> result = this.result;
+    return result != null && result.isException();
+  }
+
+  public Exception getException() {
+    NodeResult<ResultType> result = this.result;
+    if (result == null) {
+      throw new NodeNotProcessedException("Node hasn't completed processing!");
+    }
+
+    return result.getException();
+  }
+
+  public ResultType get() {
+    NodeResult<ResultType> result = this.result;
+    if (result == null) {
+      throw new NodeNotProcessedException("Node hasn't completed processing!");
+    }
+
+    if (result.isException()) {
+      throw new NodeProcessingException("Node resulted in an exception!", result.getException());
+    }
+
+    return result.getResult();
+  }
+
+  NodeResult<ResultType> getResult() {
+    return result;
+  }
+
   /**
    * @return ResultType - Returns result of processing
    * @throws Exception - any exception that occurs during processing
    */
   protected abstract ResultType process() throws Exception;
+
+  private void onDependencyUpdated(Node<?> dependency) {
+    NodeResult<?> dependencyResult = dependency.getResult();
+    if (dependencyResult != null) {
+      if (dependencyResult.isException()) {
+        // TODO: Cancel anything running somehow
+        setResult(new NodeDependencyException(dependencyResult.getException()));
+      } else {
+
+      }
+    }
+  }
 
   static class NodeResult<ResultType> {
     private final ResultType result;
@@ -139,6 +196,12 @@ public abstract class Node<ResultType> {
   public static class NodeProcessingException extends RuntimeException {
     public NodeProcessingException(String message, Throwable cause) {
       super(message, cause);
+    }
+  }
+
+  public static class NodeDependencyException extends Exception {
+    public NodeDependencyException(Throwable cause) {
+      super(cause);
     }
   }
 }
