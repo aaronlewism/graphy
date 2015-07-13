@@ -22,9 +22,9 @@ public class Graphy {
     return instance;
   }
 
-  private ExecutorService executorService = Executors.newFixedThreadPool(8);
+  private ExecutorService defaultProcessingExecutorService = Executors.newCachedThreadPool();
 
-  ExecutorService getExecutorService() {
-    return executorService;
+  ExecutorService getDefaultProcessingExecutorService() {
+    return defaultProcessingExecutorService;
   }
 }
