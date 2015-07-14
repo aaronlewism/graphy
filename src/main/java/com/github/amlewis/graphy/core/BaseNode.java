@@ -4,6 +4,7 @@ import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by amlewis on 7/12/15.
@@ -15,11 +16,11 @@ abstract class BaseNode<ResultType> {
   public ResultType get() {
     NodeResult<ResultType> result = this.result;
     if (result == null) {
-      throw new NodeNotProcessedException("AbstractProcessingNode hasn't completed processing!");
+      throw new NodeNotProcessedException("MultiDependencyNode hasn't completed processing!");
     }
 
     if (result.isException()) {
-      throw new NodeProcessingException("AbstractProcessingNode resulted in an exception!", result.getException());
+      throw new NodeProcessingException("MultiDependencyNode resulted in an exception!", result.getException());
     }
 
     return result.getResult();
@@ -28,7 +29,7 @@ abstract class BaseNode<ResultType> {
   public Exception getException() {
     NodeResult<ResultType> result = this.result;
     if (result == null) {
-      throw new NodeNotProcessedException("AbstractProcessingNode hasn't completed processing!");
+      throw new NodeNotProcessedException("MultiDependencyNode hasn't completed processing!");
     }
 
     return result.getException();
@@ -54,11 +55,14 @@ abstract class BaseNode<ResultType> {
 
   public abstract void activate();
 
+  private AtomicBoolean isActive = new AtomicBoolean(false);
   void activate(BaseNode<?> activator) {
     if (activator != null) {
       parents.add(new WeakReference<BaseNode<?>>(activator));
     }
-    activate();
+    if (isActive.compareAndSet(false, true)) {
+      activate();
+    }
   }
 
   abstract void onDependencyUpdated(BaseNode<?> dependency);

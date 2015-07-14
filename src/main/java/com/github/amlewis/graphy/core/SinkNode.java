@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * Created by amlewis on 7/11/15.
  */
-public abstract class SinkNode<ResultType> extends AbstractProcessingNode<ResultType> {
+public abstract class SinkNode<ResultType> extends MultiDependencyNode<ResultType> {
   public SinkNode(BaseNode<?>... dependencies) {
     super(dependencies);
     activate();

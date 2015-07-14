@@ -1,18 +1,19 @@
 package com.github.amlewis.graphy.core;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by amlewis on 7/12/15.
  */
-public class IfElseNode<ResultType> extends BaseNode<ResultType> {
-  private final AbstractProcessingNode<Boolean> conditionNode;
-  private final AbstractProcessingNode<ResultType> onTrueNode;
-  private final AbstractProcessingNode<ResultType> onFalseNode;
+public class IfNode<ResultType> extends ProcessingNode<ResultType> {
+  private final MultiDependencyNode<Boolean> conditionNode;
+  private final MultiDependencyNode<ResultType> onTrueNode;
+  private final MultiDependencyNode<ResultType> onFalseNode;
   private final AtomicBoolean onTrueLazy;
   private final AtomicBoolean onFalseLazy;
 
-  private IfElseNode(AbstractProcessingNode<Boolean> conditionNode, AbstractProcessingNode<ResultType> onTrueNode, boolean onTrueLazy, AbstractProcessingNode<ResultType> onFalseNode, boolean onFalseLazy) {
+  private IfNode(MultiDependencyNode<Boolean> conditionNode, MultiDependencyNode<ResultType> onTrueNode, boolean onTrueLazy, MultiDependencyNode<ResultType> onFalseNode, boolean onFalseLazy) {
     this.conditionNode = conditionNode;
     this.onTrueNode = onTrueNode;
     this.onFalseNode = onFalseNode;
@@ -33,6 +34,11 @@ public class IfElseNode<ResultType> extends BaseNode<ResultType> {
 
   @Override
   void onDependencyUpdated(BaseNode<?> dependency) {
+    update();
+  }
+
+  @Override
+  void process() {
     NodeResult<Boolean> conditionResult = conditionNode.getResult();
     if (conditionResult != null && !conditionResult.isException()) {
       if (conditionResult.getResult().booleanValue()) {
@@ -54,40 +60,48 @@ public class IfElseNode<ResultType> extends BaseNode<ResultType> {
   }
 
   public static class Builder<ResultType> {
-    private AbstractProcessingNode<Boolean> conditionNode = null;
-    private AbstractProcessingNode<ResultType> onTrueNode = null;
-    private AbstractProcessingNode<ResultType> onFalseNode = null;
+    private MultiDependencyNode<Boolean> conditionNode = null;
+    private MultiDependencyNode<ResultType> onTrueNode = null;
+    private MultiDependencyNode<ResultType> onFalseNode = null;
+    private ExecutorService executorService = null;
     private boolean onTrueLazy = false;
     private boolean onFalseLazy = false;
 
     public Builder() {
     }
 
-    public Builder conditionNode(AbstractProcessingNode<Boolean> conditionNode) {
+    public Builder conditionNode(MultiDependencyNode<Boolean> conditionNode) {
       this.conditionNode = conditionNode;
       return this;
     }
 
-    public Builder onTrueNode(AbstractProcessingNode<ResultType> onTrueNode) {
+    public Builder onTrueNode(MultiDependencyNode<ResultType> onTrueNode) {
       return onTrueNode(onTrueNode, false);
     }
 
-    public Builder onTrueNode(AbstractProcessingNode<ResultType> onTrueNode, boolean lazy) {
+    public Builder onTrueNode(MultiDependencyNode<ResultType> onTrueNode, boolean lazy) {
       this.onTrueNode = onTrueNode;
       return this;
     }
 
-    public Builder onFalseNode(AbstractProcessingNode<ResultType> onFalseNode) {
+    public Builder onFalseNode(MultiDependencyNode<ResultType> onFalseNode) {
       return onFalseNode(onFalseNode, false);
     }
 
-    public Builder onFalseNode(AbstractProcessingNode<ResultType> onFalseNode, boolean lazy) {
+    public Builder onFalseNode(MultiDependencyNode<ResultType> onFalseNode, boolean lazy) {
       this.onFalseNode = onFalseNode;
       return this;
     }
 
-    public IfElseNode<ResultType> build() {
-      return new IfElseNode<ResultType>(conditionNode, onTrueNode, onTrueLazy, onFalseNode, onFalseLazy);
+    public Builder executorService(ExecutorService executorService) {
+      this.executorService = executorService;
+      return this;
+    }
+
+    public IfNode<ResultType> build() {
+      IfNode<ResultType> node = new IfNode<ResultType>(conditionNode, onTrueNode, onTrueLazy, onFalseNode, onFalseLazy);
+      node.setExecutorService(executorService);
+      return node;
     }
   }
 }
