@@ -33,12 +33,12 @@ public class Graphy {
     return defaultProcessingExecutorService;
   }
 
-  public static <ResultType> void sinkNode(BaseNode<ResultType> node, SinkNode.SinkCallback<ResultType> callback) {
+  public static <ResultType> void sinkNode(BaseNode<ResultType> node, SinkCallback<ResultType> callback) {
     new SinkNode<>(node, callback);
   }
 
   public static <ResultType> Future<ResultType> singleSinkFuture(BaseNode<ResultType> node) {
-    SinkNode.FutureSinkCallback<ResultType> futureSinkCallback = new SinkNode.FutureSinkCallback<>();
+    SinkCallback.FutureSinkCallback<ResultType> futureSinkCallback = new SinkCallback.FutureSinkCallback<>();
     SinkNode.sink(FirstValueNode.wrap(node), futureSinkCallback);
     return futureSinkCallback;
   }
