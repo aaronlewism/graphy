@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/10/15.
  */
 public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<ResultType> {
-  private final List<BaseNode<?>> dependencies = new LinkedList<>();
+  private final Set<BaseNode<?>> dependencies = new ConcurrentSkipListSet<>();
   private final Set<BaseNode<?>> unreadyDependencies = new ConcurrentSkipListSet<>();
   private final Set<BaseNode<?>> exceptionalDependencies = new ConcurrentSkipListSet<>();
 
@@ -23,7 +23,7 @@ public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<Res
   public MultiDependencyNode(Collection<BaseNode<?>> dependencies) {
     this.dependencies.addAll(dependencies);
   }
-  
+
   public void activate() {
     // TODO: Wasteful
     for (BaseNode<?> dependency : dependencies) {
@@ -66,23 +66,25 @@ public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<Res
   protected abstract ResultType processResult() throws Exception;
 
   void onDependencyUpdated(BaseNode<?> dependency) {
-    NodeResult<?> dependencyResult = dependency.getResult();
-    if (dependencyResult != null) {
-      unreadyDependencies.remove(dependency);
-      if (dependencyResult.isException()) {
-        cancel();
-        exceptionalDependencies.add(dependency);
-        setResult(dependencyResult.getException());
-      } else {
-        exceptionalDependencies.remove(dependency);
-        if (exceptionalDependencies.isEmpty() && unreadyDependencies.isEmpty()) {
-          update();
+    if (dependencies.contains(dependency)) {
+      NodeResult<?> dependencyResult = dependency.getResult();
+      if (dependencyResult != null) {
+        unreadyDependencies.remove(dependency);
+        if (dependencyResult.isException()) {
+          cancel();
+          exceptionalDependencies.add(dependency);
+          setResult(dependencyResult.getException());
+        } else {
+          exceptionalDependencies.remove(dependency);
+          if (exceptionalDependencies.isEmpty() && unreadyDependencies.isEmpty()) {
+            update();
+          }
         }
+      } else {
+        cancel();
+        setResult((NodeResult<ResultType>) null);
+        unreadyDependencies.add(dependency);
       }
-    } else {
-      cancel();
-      setResult((NodeResult<ResultType>) null);
-      unreadyDependencies.add(dependency);
     }
   }
 }

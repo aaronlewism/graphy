@@ -24,6 +24,7 @@ public class TryNode<ResultType> extends ProcessingNode<ResultType> {
     if (!lazy.get()) {
       onExceptionNode.activate(this);
     }
+    update();
   }
 
   @Override

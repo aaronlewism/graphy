@@ -2,25 +2,24 @@ package com.github.amlewis.graphy.core;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by amlewis on 7/12/15.
  */
 abstract class BaseNode<ResultType> {
-  private final List<WeakReference<BaseNode<?>>> parents = new LinkedList<>();
+  private final ConcurrentSkipListSet<WeakReference<BaseNode<?>>> parents = new ConcurrentSkipListSet<>();
   private NodeResult<ResultType> result = null;
 
   public ResultType get() {
     NodeResult<ResultType> result = this.result;
     if (result == null) {
-      throw new NodeNotProcessedException("MultiDependencyNode hasn't completed processing!");
+      throw new NodeNotProcessedException("Node hasn't completed processing!");
     }
 
     if (result.isException()) {
-      throw new NodeProcessingException("MultiDependencyNode resulted in an exception!", result.getException());
+      throw new NodeProcessingException("Node resulted in an exception!", result.getException());
     }
 
     return result.getResult();
@@ -29,7 +28,7 @@ abstract class BaseNode<ResultType> {
   public Exception getException() {
     NodeResult<ResultType> result = this.result;
     if (result == null) {
-      throw new NodeNotProcessedException("MultiDependencyNode hasn't completed processing!");
+      throw new NodeNotProcessedException("Node hasn't completed processing!");
     }
 
     return result.getException();
@@ -56,6 +55,7 @@ abstract class BaseNode<ResultType> {
   public abstract void activate();
 
   private AtomicBoolean isActive = new AtomicBoolean(false);
+
   void activate(BaseNode<?> activator) {
     if (activator != null) {
       parents.add(new WeakReference<BaseNode<?>>(activator));
@@ -67,17 +67,29 @@ abstract class BaseNode<ResultType> {
 
   abstract void onDependencyUpdated(BaseNode<?> dependency);
 
+  // TODO: Enqueue updated nodes instead of calling onDependencyUpdated on multiple threads?
+  // TODO: This spawns a LOT of threads. (n + 1 where n is number of parents)
   void notifyParents() {
-    Iterator<WeakReference<BaseNode<?>>> parentsIterator = parents.iterator();
-    while (parentsIterator.hasNext()) {
-      WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
-      BaseNode<?> parent = parentRef.get();
-      if (parent == null) {
-        parentsIterator.remove();
-      } else {
-        parent.onDependencyUpdated(this);
+    Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
+      @Override
+      public void run() {
+        Iterator<WeakReference<BaseNode<?>>> parentsIterator = parents.iterator();
+        while (parentsIterator.hasNext()) {
+          WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
+          final BaseNode<?> parent = parentRef.get();
+          if (parent == null) {
+            parentsIterator.remove();
+          } else {
+            Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
+              @Override
+              public void run() {
+                parent.onDependencyUpdated(BaseNode.this);
+              }
+            });
+          }
+        }
       }
-    }
+    });
   }
 
   void setResult(NodeResult<ResultType> result) {

@@ -30,6 +30,7 @@ public class IfNode<ResultType> extends ProcessingNode<ResultType> {
     if (!onFalseLazy.get()) {
       onFalseNode.activate(this);
     }
+    update();
   }
 
   @Override
