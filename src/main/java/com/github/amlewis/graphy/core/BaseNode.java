@@ -54,6 +54,17 @@ abstract class BaseNode<ResultType> {
 
   public abstract void activate();
 
+  void deactivate(BaseNode<?> deactivator) {
+    Iterator<WeakReference<BaseNode<?>>> parentsIterator = parents.iterator();
+    while (parentsIterator.hasNext()) {
+      WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
+      final BaseNode<?> parent = parentRef.get();
+      if (parent == null || parent == deactivator) {
+        parentsIterator.remove();
+      }
+    }
+  }
+
   private AtomicBoolean isActive = new AtomicBoolean(false);
 
   void activate(BaseNode<?> activator) {
@@ -77,7 +88,7 @@ abstract class BaseNode<ResultType> {
         while (parentsIterator.hasNext()) {
           WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
           final BaseNode<?> parent = parentRef.get();
-          if (parent == null) {
+          if (parent == null || !parent.isActive.get()) {
             parentsIterator.remove();
           } else {
             Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
