@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/11/15.
  */
-public class SinkNode<ResultType> extends ProcessingNode<ResultType> {
+class SinkNode<ResultType> extends ProcessingNode<Void> {
   public static <ResultType> void sink(BaseNode<ResultType> nodeToSink, SinkCallback<ResultType> callback) {
     new SinkNode<>(nodeToSink, callback);
   }

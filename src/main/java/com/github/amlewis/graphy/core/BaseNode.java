@@ -1,15 +1,17 @@
 package com.github.amlewis.graphy.core;
 
 import java.lang.ref.WeakReference;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by amlewis on 7/12/15.
  */
 abstract class BaseNode<ResultType> {
-  private final ConcurrentSkipListSet<WeakReference<BaseNode<?>>> parents = new ConcurrentSkipListSet<>();
+  private final Set<BaseNode<?>> parents = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<BaseNode<?>, Boolean>()));
   private NodeResult<ResultType> result = null;
 
   public ResultType get() {
@@ -52,56 +54,24 @@ abstract class BaseNode<ResultType> {
     return result != null && result.isException();
   }
 
-  public abstract void activate();
-
-  void deactivate(BaseNode<?> deactivator) {
-    Iterator<WeakReference<BaseNode<?>>> parentsIterator = parents.iterator();
-    while (parentsIterator.hasNext()) {
-      WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
-      final BaseNode<?> parent = parentRef.get();
-      if (parent == null || parent == deactivator) {
-        parentsIterator.remove();
-      }
-    }
-  }
-
   private AtomicBoolean isActive = new AtomicBoolean(false);
 
   void activate(BaseNode<?> activator) {
     if (activator != null) {
-      parents.add(new WeakReference<BaseNode<?>>(activator));
+      parents.add(activator);
     }
     if (isActive.compareAndSet(false, true)) {
       activate();
     }
   }
 
-  abstract void onDependencyUpdated(BaseNode<?> dependency);
+  protected abstract void activate();
 
-  // TODO: Enqueue updated nodes instead of calling onDependencyUpdated on multiple threads?
-  // TODO: This spawns a LOT of threads. (n + 1 where n is number of parents)
-  void notifyParents() {
-    Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
-      @Override
-      public void run() {
-        Iterator<WeakReference<BaseNode<?>>> parentsIterator = parents.iterator();
-        while (parentsIterator.hasNext()) {
-          WeakReference<BaseNode<?>> parentRef = parentsIterator.next();
-          final BaseNode<?> parent = parentRef.get();
-          if (parent == null || !parent.isActive.get()) {
-            parentsIterator.remove();
-          } else {
-            Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
-              @Override
-              public void run() {
-                parent.onDependencyUpdated(BaseNode.this);
-              }
-            });
-          }
-        }
-      }
-    });
+  void deactivate(BaseNode<?> deactivator) {
+    parents.remove(deactivator);
   }
+
+  abstract void onDependencyUpdated(BaseNode<?> dependency);
 
   void setResult(NodeResult<ResultType> result) {
     if (this.result != result) {
@@ -111,16 +81,40 @@ abstract class BaseNode<ResultType> {
   }
 
   void setResult(ResultType result) {
-    if (this.result != null && this.result.getResult() != result) {
+    if (this.result == null || this.result.getResult() != result) {
       this.result = new NodeResult<ResultType>(result);
       notifyParents();
     }
   }
 
   void setResult(Exception exception) {
-    if (this.result != null && this.result.getException() != exception) {
+    if (this.result == null || this.result.getException() != exception) {
       this.result = new NodeResult<ResultType>(exception);
       notifyParents();
+    }
+  }
+
+  // TODO: Enqueue updated nodes instead of calling onDependencyUpdated on multiple threads?
+  // TODO: This spawns a LOT of threads. (n + 1 where n is number of parents)
+  void notifyParents() {
+    System.out.println(this + " " + this.getClass().getSimpleName() + " notifying parents");
+    notifyParentsRunnable.refresh(Graphy.getInstance().getGraphyExecutorService());
+  }
+
+  private final NotifyParentsRunnable notifyParentsRunnable = new NotifyParentsRunnable();
+  private class NotifyParentsRunnable extends RefreshRunnable {
+    @Override
+    public void work() {
+      Iterator<BaseNode<?>> parentsIterator = new ArrayList<BaseNode<?>>(parents).iterator();
+      while (parentsIterator.hasNext()) {
+        final BaseNode<?> parent = parentsIterator.next();
+        Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
+          @Override
+          public void run() {
+            parent.onDependencyUpdated(BaseNode.this);
+          }
+        });
+      }
     }
   }
 

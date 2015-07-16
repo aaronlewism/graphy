@@ -2,6 +2,7 @@ package com.github.amlewis.graphy.core;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,17 +11,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/10/15.
  */
 public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<ResultType> {
-  private final Set<BaseNode<?>> dependencies = new ConcurrentSkipListSet<>();
-  private final Set<BaseNode<?>> unreadyDependencies = new ConcurrentSkipListSet<>();
-  private final Set<BaseNode<?>> exceptionalDependencies = new ConcurrentSkipListSet<>();
+  private final Set<BaseNode<?>> dependencies;
+  private final Set<BaseNode<?>> unreadyDependencies;
+  private final Set<BaseNode<?>> exceptionalDependencies;
 
   public MultiDependencyNode(BaseNode<?>... dependencies) {
+    this.dependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
+    this.unreadyDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
+    this.exceptionalDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
     for (BaseNode<?> node : dependencies) {
       this.dependencies.add(node);
     }
   }
 
   public MultiDependencyNode(Collection<BaseNode<?>> dependencies) {
+    int size = dependencies.size();
+    this.dependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
+    this.unreadyDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
+    this.exceptionalDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
     this.dependencies.addAll(dependencies);
   }
 

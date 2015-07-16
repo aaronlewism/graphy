@@ -13,12 +13,10 @@ public class ValueNode<ValueType> extends BaseNode<ValueType> {
   }
 
   public ValueNode(ValueType result) {
-    super();
     setResult(result);
   }
 
   public ValueNode(Exception exception) {
-    super();
     setResult(exception);
   }
 

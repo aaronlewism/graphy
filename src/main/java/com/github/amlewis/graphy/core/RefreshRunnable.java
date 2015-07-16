@@ -7,11 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/13/15.
  */
-public abstract class RefreshRunnable implements Runnable {
+abstract class RefreshRunnable implements Runnable {
   private boolean shouldCancel = false;
   private boolean isUpdating = false;
   private boolean needsUpdating = false;
-  private Future<?> runnableFuture;
+  private Future<?> runnableFuture = null;
 
   /**
    * Marks ndoe as needing a refresh, executing if needed.
@@ -37,8 +37,8 @@ public abstract class RefreshRunnable implements Runnable {
       synchronized (this) {
         shouldCancel = false;
         if (!needsUpdating) {
-          isUpdating = false;
           runnableFuture = null;
+          isUpdating = false;
           return;
         }
         needsUpdating = false;
