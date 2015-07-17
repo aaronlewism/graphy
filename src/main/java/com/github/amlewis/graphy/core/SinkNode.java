@@ -1,8 +1,5 @@
 package com.github.amlewis.graphy.core;
 
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * Created by amlewis on 7/11/15.
  */
@@ -42,16 +39,20 @@ class SinkNode<ResultType> extends ProcessingNode<Void> {
     nodeToSink.deactivate(this);
   }
 
+  private NodeResult<ResultType> lastResult = null;
+
   @Override
   void process() {
     NodeResult<ResultType> result = nodeToSink.getResult();
-    if (result != null) {
+
+    if (lastResult != result && (lastResult == null || !lastResult.equals(result))) {
       if (result.isException()) {
-        callback.onException(result.getException());
+        callback.onNewException(result.getException());
       } else {
-        callback.onResult(result.getResult());
+        callback.onNewResult(result.getResult());
       }
     }
+    lastResult = result;
   }
 
 }

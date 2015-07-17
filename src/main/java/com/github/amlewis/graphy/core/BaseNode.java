@@ -74,21 +74,21 @@ abstract class BaseNode<ResultType> {
   abstract void onDependencyUpdated(BaseNode<?> dependency);
 
   void setResult(NodeResult<ResultType> result) {
-    if (this.result != result) {
+    if (this.result != result && (this.result == null || !this.result.equals(result))) {
       this.result = result;
       notifyParents();
     }
   }
 
   void setResult(ResultType result) {
-    if (this.result == null || this.result.getResult() != result) {
+    if (this.result == null || (!this.result.getResult().equals(result))) {
       this.result = new NodeResult<ResultType>(result);
       notifyParents();
     }
   }
 
   void setResult(Exception exception) {
-    if (this.result == null || this.result.getException() != exception) {
+    if (this.result == null || (!this.result.getException().equals(exception))) {
       this.result = new NodeResult<ResultType>(exception);
       notifyParents();
     }
@@ -97,7 +97,6 @@ abstract class BaseNode<ResultType> {
   // TODO: Enqueue updated nodes instead of calling onDependencyUpdated on multiple threads?
   // TODO: This spawns a LOT of threads. (n + 1 where n is number of parents)
   void notifyParents() {
-    System.out.println(this + " " + this.getClass().getSimpleName() + " notifying parents");
     notifyParentsRunnable.refresh(Graphy.getInstance().getGraphyExecutorService());
   }
 

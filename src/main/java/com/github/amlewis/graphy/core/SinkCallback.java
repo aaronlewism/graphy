@@ -6,6 +6,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by amlewis on 7/15/15.
+ * SinkCallbacks handle extracting results out of Graphy.
+ * It is important to hold a strong reference to the SinkCallback in order to prevent it's associated SinkNode from
+ * getting garbage collected.
  */
 public abstract class SinkCallback<ResultType> {
   // Keeps strong references to sink nodes so they don't get cleaned up.
@@ -17,9 +20,11 @@ public abstract class SinkCallback<ResultType> {
     }
   }
 
-  public abstract void onResult(ResultType result);
+  protected abstract void onNewResult(ResultType result);
 
-  public abstract void onException(Exception exception);
+  protected abstract void onNewException(Exception exception);
+
+  protected abstract void onUnset();
 
   public final void deregister() {
     SinkNode<ResultType> node = nodeRef.get();
@@ -33,13 +38,18 @@ public abstract class SinkCallback<ResultType> {
     private AtomicBoolean cancelled = new AtomicBoolean(false);
 
     @Override
-    public void onResult(ResultType result) {
+    public void onNewResult(ResultType result) {
       this.resultQueue.offer(new NodeResult<ResultType>(result));
     }
 
     @Override
-    public void onException(Exception exception) {
+    public void onNewException(Exception exception) {
       this.resultQueue.offer(new NodeResult<ResultType>(exception));
+    }
+
+    @Override
+    protected void onUnset() {
+      // Do nothing. Since FutureSinkCallback is used exclusively after FirstValueNode, and FirstValueNode never calls unset, we should be fine doing nothing.
     }
 
     @Override

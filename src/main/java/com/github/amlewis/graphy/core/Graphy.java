@@ -33,7 +33,11 @@ public class Graphy {
     return defaultProcessingExecutorService;
   }
 
-  public static <ResultType> void sinkNode(BaseNode<ResultType> node, SinkCallback<ResultType> callback) {
+  public void setDefaultProcessingExecutorService(ExecutorService executorService) {
+    this.defaultProcessingExecutorService = executorService;
+  }
+
+  public static <ResultType> void sink(BaseNode<ResultType> node, SinkCallback<ResultType> callback) {
     new SinkNode<>(node, callback);
   }
 

@@ -31,4 +31,22 @@ class NodeResult<ResultType> {
   public boolean isException() {
     return exception != null;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    NodeResult<ResultType> that = (NodeResult<ResultType>) o;
+
+    if (result != null ? !result.equals(that.result) : that.result != null) return false;
+    return !(exception != null ? !exception.equals(that.exception) : that.exception != null);
+  }
+
+  @Override
+  public int hashCode() {
+    int result1 = result != null ? result.hashCode() : 0;
+    result1 = 31 * result1 + (exception != null ? exception.hashCode() : 0);
+    return result1;
+  }
 }
