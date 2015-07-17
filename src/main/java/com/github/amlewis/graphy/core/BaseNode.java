@@ -27,35 +27,13 @@ abstract class BaseNode<ResultType> {
     return result.getResult();
   }
 
-  public Exception getException() {
-    NodeResult<ResultType> result = this.result;
-    if (result == null) {
-      throw new NodeNotProcessedException("Node hasn't completed processing!");
-    }
-
-    return result.getException();
-  }
-
   NodeResult<ResultType> getResult() {
     return result;
   }
 
-  public boolean isReady() {
-    return result != null;
-  }
-
-  public boolean isSuccess() {
-    NodeResult<ResultType> result = this.result;
-    return result != null && !result.isException();
-  }
-
-  public boolean isException() {
-    NodeResult<ResultType> result = this.result;
-    return result != null && result.isException();
-  }
-
   private AtomicBoolean isActive = new AtomicBoolean(false);
 
+  // TODO: Race conditions between activate and deactivate!
   void activate(BaseNode<?> activator) {
     if (activator != null) {
       parents.add(activator);
@@ -69,7 +47,12 @@ abstract class BaseNode<ResultType> {
 
   void deactivate(BaseNode<?> deactivator) {
     parents.remove(deactivator);
+//    if (parents.isEmpty() && isActive.compareAndSet(true, false)) {
+//      deactivate();
+//    }
   }
+
+  //protected abstract void deactivate();
 
   abstract void onDependencyUpdated(BaseNode<?> dependency);
 
@@ -81,17 +64,11 @@ abstract class BaseNode<ResultType> {
   }
 
   void setResult(ResultType result) {
-    if (this.result == null || (!this.result.getResult().equals(result))) {
-      this.result = new NodeResult<ResultType>(result);
-      notifyParents();
-    }
+    setResult(new NodeResult<ResultType>(result));
   }
 
   void setResult(Exception exception) {
-    if (this.result == null || (!this.result.getException().equals(exception))) {
-      this.result = new NodeResult<ResultType>(exception);
-      notifyParents();
-    }
+    setResult(new NodeResult<ResultType>(exception));
   }
 
   // TODO: Enqueue updated nodes instead of calling onDependencyUpdated on multiple threads?

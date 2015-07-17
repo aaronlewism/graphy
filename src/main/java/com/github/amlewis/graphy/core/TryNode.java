@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/12/15.
  */
-public class TryNode<ResultType> extends ProcessingNode<ResultType> {
+public final class TryNode<ResultType> extends ProcessingNode<ResultType> {
   private final BaseNode<ResultType> mainNode;
   private final BaseNode<ResultType> onExceptionNode;
   private final Class<? extends Exception> exceptionClass;

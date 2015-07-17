@@ -35,6 +35,11 @@ abstract class ProcessingNode<ResultType> extends BaseNode<ResultType> {
   @Override
   abstract void onDependencyUpdated(BaseNode<?> dependency);
 
+  /**
+   * Process is guaranteed to run at least once after each invocation of update(). Process should call setResult() when
+   * a result is ready. The process() method for a given node is guaranteed to be executing on at most one thread at any
+   * given time.
+   */
   abstract void process();
 
 

@@ -16,9 +16,9 @@ public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<Res
   private final Set<BaseNode<?>> exceptionalDependencies;
 
   public MultiDependencyNode(BaseNode<?>... dependencies) {
-    this.dependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
-    this.unreadyDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
-    this.exceptionalDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(dependencies.length));
+    this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
+    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
+    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
     for (BaseNode<?> node : dependencies) {
       this.dependencies.add(node);
     }
@@ -26,9 +26,9 @@ public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<Res
 
   public MultiDependencyNode(Collection<BaseNode<?>> dependencies) {
     int size = dependencies.size();
-    this.dependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
-    this.unreadyDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
-    this.exceptionalDependencies = Collections.newSetFromMap(new ConcurrentHashMap<BaseNode<?>, Boolean>(size));
+    this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
+    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
+    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
     this.dependencies.addAll(dependencies);
   }
 

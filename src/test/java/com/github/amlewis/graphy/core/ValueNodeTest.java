@@ -16,13 +16,13 @@ public class ValueNodeTest {
   public void setValueBeforeSink() throws ExecutionException, InterruptedException {
     final ValueNode<Integer> valueNode = new ValueNode<Integer>();
     valueNode.setValue(5);
-    assertEquals(5, Graphy.singleSink(valueNode).intValue());
+    assertEquals(5, Graphy.sinkFirstResult(valueNode).intValue());
   }
 
   @Test
   public void setValueAfterSink() throws ExecutionException, InterruptedException {
     final ValueNode<Integer> valueNode = new ValueNode<Integer>();
-    final Future<Integer> sinkFuture = Graphy.singleSinkFuture(valueNode);
+    final Future<Integer> sinkFuture = Graphy.sinkFirstResultFuture(valueNode);
     valueNode.setValue(5);
     assertEquals(5, sinkFuture.get().intValue());
   }
@@ -31,7 +31,7 @@ public class ValueNodeTest {
   public void valueNodeUpdatesShouldBeOrdered() {
     final int NUM_SETS = 1000;
     final ValueNode<Integer> valueNode = new ValueNode<Integer>();
-    BlockingDeque<NodeResult<Integer>> sink = GraphyTestUtils.sinkToQueue(valueNode, NUM_SETS);
+    BlockingDeque<NodeResult<Integer>> sink = Graphy.sinkToBlockingDeque(valueNode, NUM_SETS);
 
     for (int i = 1; i <= NUM_SETS; ++i) {
       valueNode.setValue(i);
@@ -58,11 +58,30 @@ public class ValueNodeTest {
       assertNotNull("NodeResult must not be null!", result);
       assertNotNull("NodeResult.getResult must not be null!", result.getResult());
       Integer current = result.getResult();
-      System.out.print(current.intValue() + " ");
       if (prev != null) {
         assertTrue("Previous Result should be less than the Current!", prev.intValue() < current.intValue());
       }
       prev = current;
     }
+  }
+
+  @Test
+  public void valueExceptionBackAndForthTest() throws InterruptedException {
+    final ValueNode<Integer> valueNode = new ValueNode<Integer>();
+    BlockingDeque<NodeResult<Integer>> sink = Graphy.sinkToBlockingDeque(valueNode, 1);
+
+    valueNode.setValue(5);
+    assertEquals(5, sink.take().getResult().intValue());
+
+    Exception exception1 = new Exception();
+    valueNode.setValue(exception1);
+    assertEquals(exception1, sink.take().getException());
+
+    valueNode.setValue(6);
+    assertEquals(6, sink.take().getResult().intValue());
+
+    Exception exception2 = new Exception();
+    valueNode.setValue(exception2);
+    assertEquals(exception2, sink.take().getException());
   }
 }

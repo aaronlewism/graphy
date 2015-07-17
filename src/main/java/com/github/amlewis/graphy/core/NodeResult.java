@@ -3,7 +3,7 @@ package com.github.amlewis.graphy.core;
 /**
  * Created by amlewis on 7/12/15.
  */
-class NodeResult<ResultType> {
+public class NodeResult<ResultType> {
   private final ResultType result;
   private final Exception exception;
 
@@ -37,7 +37,7 @@ class NodeResult<ResultType> {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    NodeResult<ResultType> that = (NodeResult<ResultType>) o;
+    NodeResult<?> that = (NodeResult<?>) o;
 
     if (result != null ? !result.equals(that.result) : that.result != null) return false;
     return !(exception != null ? !exception.equals(that.exception) : that.exception != null);

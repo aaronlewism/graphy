@@ -21,12 +21,12 @@ public class GraphyTest {
    */
   @Test
   public void simpleValueNodeSinkTests() throws ExecutionException, InterruptedException {
-    assertEquals("Graphy.sink(ValueNode.of(2)) should be 2", 2, Graphy.singleSink(ValueNode.of(2)).intValue());
-    assertEquals("Graphy.sink(ValueNode.of(null)) should be null", null, Graphy.singleSink(ValueNode.of((Object) null)));
+    assertEquals("Graphy.sink(ValueNode.of(2)) should be 2", 2, Graphy.sinkFirstResult(ValueNode.of(2)).intValue());
+    assertEquals("Graphy.sink(ValueNode.of(null)) should be null", null, Graphy.sinkFirstResult(ValueNode.of((Object) null)));
 
     NullPointerException exception = new NullPointerException();
     try {
-      Graphy.singleSink(ValueNode.<Integer>of(exception));
+      Graphy.sinkFirstResult(ValueNode.<Integer>of(exception));
       fail("Graphy.sink(ValueNode.of(NullPointerException)) should throw ExecutionException(NullPointerException)");
     } catch (ExecutionException e) {
       assertEquals("Graphy.sink(ValueNode.of(NullPointerException)) should throw ExecutionException(NullPointerException)", exception, e.getCause());

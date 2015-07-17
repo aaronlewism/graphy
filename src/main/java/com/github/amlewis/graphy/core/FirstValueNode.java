@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/15/15.
  */
-public class FirstValueNode<ResultType> extends BaseNode<ResultType> {
+public final class FirstValueNode<ResultType> extends BaseNode<ResultType> {
   public static <ResultType> FirstValueNode<ResultType> wrap(BaseNode<ResultType> child) {
     return new FirstValueNode<>(child);
   }

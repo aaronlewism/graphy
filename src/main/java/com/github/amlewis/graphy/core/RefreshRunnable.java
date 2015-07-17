@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/13/15.
  */
 abstract class RefreshRunnable implements Runnable {
-  private boolean shouldCancel = false;
-  private boolean isUpdating = false;
-  private boolean needsUpdating = false;
-  private Future<?> runnableFuture = null;
+  private volatile boolean shouldCancel = false;
+  private volatile boolean isUpdating = false;
+  private volatile boolean needsUpdating = false;
+  private volatile Future<?> runnableFuture = null;
 
   /**
    * Marks ndoe as needing a refresh, executing if needed.
@@ -44,7 +44,15 @@ abstract class RefreshRunnable implements Runnable {
         needsUpdating = false;
       }
 
-      work();
+      try {
+        work();
+      } catch (Exception e) {
+        synchronized (this) {
+          runnableFuture = null;
+          isUpdating = false;
+        }
+        throw e;
+      }
     }
   }
 

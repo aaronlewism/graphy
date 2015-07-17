@@ -6,28 +6,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/12/15.
  */
-public class IfNode<ResultType> extends ProcessingNode<ResultType> {
+public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
   private final MultiDependencyNode<Boolean> conditionNode;
   private final MultiDependencyNode<ResultType> onTrueNode;
   private final MultiDependencyNode<ResultType> onFalseNode;
-  private final AtomicBoolean onTrueLazy;
-  private final AtomicBoolean onFalseLazy;
+  private final AtomicBoolean OnTrueShouldActivate;
+  private final AtomicBoolean onFalseShouldActivate;
 
   private IfNode(MultiDependencyNode<Boolean> conditionNode, MultiDependencyNode<ResultType> onTrueNode, boolean onTrueLazy, MultiDependencyNode<ResultType> onFalseNode, boolean onFalseLazy) {
     this.conditionNode = conditionNode;
     this.onTrueNode = onTrueNode;
     this.onFalseNode = onFalseNode;
-    this.onTrueLazy = new AtomicBoolean(onTrueLazy);
-    this.onFalseLazy = new AtomicBoolean(onFalseLazy);
+    this.OnTrueShouldActivate = new AtomicBoolean(onTrueLazy);
+    this.onFalseShouldActivate = new AtomicBoolean(onFalseLazy);
   }
 
   @Override
-  public void activate() {
+   protected void activate() {
     conditionNode.activate(this);
-    if (!onTrueLazy.get()) {
+    if (!OnTrueShouldActivate.get()) {
       onTrueNode.activate(this);
     }
-    if (!onFalseLazy.get()) {
+    if (!onFalseShouldActivate.get()) {
       onFalseNode.activate(this);
     }
     update();
@@ -43,12 +43,12 @@ public class IfNode<ResultType> extends ProcessingNode<ResultType> {
     NodeResult<Boolean> conditionResult = conditionNode.getResult();
     if (conditionResult != null && !conditionResult.isException()) {
       if (conditionResult.getResult().booleanValue()) {
-        if (onTrueLazy.compareAndSet(true, false)) {
+        if (OnTrueShouldActivate.compareAndSet(true, false)) {
           onTrueNode.activate(this);
         }
         setResult(onTrueNode.getResult());
       } else {
-        if (onFalseLazy.compareAndSet(true, false)) {
+        if (onFalseShouldActivate.compareAndSet(true, false)) {
           onFalseNode.activate(this);
         }
         setResult(onFalseNode.getResult());
