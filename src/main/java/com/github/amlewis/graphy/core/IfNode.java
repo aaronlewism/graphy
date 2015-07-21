@@ -60,6 +60,7 @@ public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
     }
   }
 
+  // TODO: Builder constructor should always require any required nodes?
   public static class Builder<ResultType> {
     private StateNode<Boolean> conditionNode = null;
     private StateNode<ResultType> onTrueNode = null;
