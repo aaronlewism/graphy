@@ -7,13 +7,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/12/15.
  */
 public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
-  private final MultiDependencyNode<Boolean> conditionNode;
-  private final MultiDependencyNode<ResultType> onTrueNode;
-  private final MultiDependencyNode<ResultType> onFalseNode;
+  private final StateNode<Boolean> conditionNode;
+  private final StateNode<ResultType> onTrueNode;
+  private final StateNode<ResultType> onFalseNode;
   private final AtomicBoolean OnTrueShouldActivate;
   private final AtomicBoolean onFalseShouldActivate;
 
-  private IfNode(MultiDependencyNode<Boolean> conditionNode, MultiDependencyNode<ResultType> onTrueNode, boolean onTrueLazy, MultiDependencyNode<ResultType> onFalseNode, boolean onFalseLazy) {
+  private IfNode(StateNode<Boolean> conditionNode, StateNode<ResultType> onTrueNode, boolean onTrueLazy, StateNode<ResultType> onFalseNode, boolean onFalseLazy) {
     this.conditionNode = conditionNode;
     this.onTrueNode = onTrueNode;
     this.onFalseNode = onFalseNode;
@@ -61,9 +61,9 @@ public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
   }
 
   public static class Builder<ResultType> {
-    private MultiDependencyNode<Boolean> conditionNode = null;
-    private MultiDependencyNode<ResultType> onTrueNode = null;
-    private MultiDependencyNode<ResultType> onFalseNode = null;
+    private StateNode<Boolean> conditionNode = null;
+    private StateNode<ResultType> onTrueNode = null;
+    private StateNode<ResultType> onFalseNode = null;
     private ExecutorService executorService = null;
     private boolean onTrueLazy = false;
     private boolean onFalseLazy = false;
@@ -71,25 +71,25 @@ public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
     public Builder() {
     }
 
-    public Builder conditionNode(MultiDependencyNode<Boolean> conditionNode) {
+    public Builder conditionNode(StateNode<Boolean> conditionNode) {
       this.conditionNode = conditionNode;
       return this;
     }
 
-    public Builder onTrueNode(MultiDependencyNode<ResultType> onTrueNode) {
+    public Builder onTrueNode(StateNode<ResultType> onTrueNode) {
       return onTrueNode(onTrueNode, false);
     }
 
-    public Builder onTrueNode(MultiDependencyNode<ResultType> onTrueNode, boolean lazy) {
+    public Builder onTrueNode(StateNode<ResultType> onTrueNode, boolean lazy) {
       this.onTrueNode = onTrueNode;
       return this;
     }
 
-    public Builder onFalseNode(MultiDependencyNode<ResultType> onFalseNode) {
+    public Builder onFalseNode(StateNode<ResultType> onFalseNode) {
       return onFalseNode(onFalseNode, false);
     }
 
-    public Builder onFalseNode(MultiDependencyNode<ResultType> onFalseNode, boolean lazy) {
+    public Builder onFalseNode(StateNode<ResultType> onFalseNode, boolean lazy) {
       this.onFalseNode = onFalseNode;
       return this;
     }

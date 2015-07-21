@@ -23,13 +23,13 @@ public class Graphy {
     return instance;
   }
 
-  private ExecutorService graphyExecutorService = Executors.newCachedThreadPool();
+  private volatile ExecutorService graphyExecutorService = Executors.newCachedThreadPool();
 
   ExecutorService getGraphyExecutorService() {
     return graphyExecutorService;
   }
 
-  private ExecutorService defaultProcessingExecutorService = Executors.newCachedThreadPool();
+  private volatile ExecutorService defaultProcessingExecutorService = graphyExecutorService;
 
   ExecutorService getDefaultProcessingExecutorService() {
     return defaultProcessingExecutorService;

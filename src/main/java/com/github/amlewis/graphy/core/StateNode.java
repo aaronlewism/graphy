@@ -10,12 +10,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/10/15.
  */
-public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<ResultType> {
+public abstract class StateNode<ResultType> extends ProcessingNode<ResultType> {
   private final Set<BaseNode<?>> dependencies;
   private final Set<BaseNode<?>> unreadyDependencies;
   private final Set<BaseNode<?>> exceptionalDependencies;
 
-  public MultiDependencyNode(BaseNode<?>... dependencies) {
+  public StateNode(BaseNode<?>... dependencies) {
     this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
     this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
     this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
@@ -24,7 +24,7 @@ public abstract class MultiDependencyNode<ResultType> extends ProcessingNode<Res
     }
   }
 
-  public MultiDependencyNode(Collection<BaseNode<?>> dependencies) {
+  public StateNode(Collection<BaseNode<?>> dependencies) {
     int size = dependencies.size();
     this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
     this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
