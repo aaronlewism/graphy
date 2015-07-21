@@ -6,12 +6,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by amlewis on 7/12/15.
  */
 public final class TryNode<ResultType> extends ProcessingNode<ResultType> {
-  private final BaseNode<ResultType> mainNode;
-  private final BaseNode<ResultType> onExceptionNode;
+  private final Node<ResultType> mainNode;
+  private final Node<ResultType> onExceptionNode;
   private final Class<? extends Exception> exceptionClass;
   private final AtomicBoolean lazy;
 
-  public TryNode(BaseNode<ResultType> mainNode, BaseNode<ResultType> onExceptionNode, boolean lazy, Class<? extends Exception> exceptionClass) {
+  public TryNode(Node<ResultType> mainNode, Node<ResultType> onExceptionNode, boolean lazy, Class<? extends Exception> exceptionClass) {
     this.mainNode = mainNode;
     this.onExceptionNode = onExceptionNode;
     this.exceptionClass = exceptionClass;
@@ -49,29 +49,29 @@ public final class TryNode<ResultType> extends ProcessingNode<ResultType> {
   }
 
   @Override
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     update();
   }
 
   public static class Builder<ResultType> {
-    private BaseNode<ResultType> mainNode;
-    private BaseNode<ResultType> onExceptionNode;
+    private Node<ResultType> mainNode;
+    private Node<ResultType> onExceptionNode;
     private boolean lazy;
     private Class<? extends Exception> exceptionClass;
 
     public Builder() {
     }
 
-    public Builder mainNode(BaseNode<ResultType> mainNode) {
+    public Builder mainNode(Node<ResultType> mainNode) {
       this.mainNode = mainNode;
       return this;
     }
 
-    public Builder onExceptionNode(BaseNode<ResultType> onExceptionNode) {
+    public Builder onExceptionNode(Node<ResultType> onExceptionNode) {
       return onExceptionNode(onExceptionNode, false);
     }
 
-    public Builder onExceptionNode(BaseNode<ResultType> onExceptionNode, boolean lazy) {
+    public Builder onExceptionNode(Node<ResultType> onExceptionNode, boolean lazy) {
       this.onExceptionNode = onExceptionNode;
       this.lazy = lazy;
       return this;
@@ -83,7 +83,7 @@ public final class TryNode<ResultType> extends ProcessingNode<ResultType> {
     }
 
     public TryNode<ResultType> build() {
-      return new TryNode<>(mainNode, onExceptionNode, lazy, exceptionClass);
+      return new TryNode<ResultType>(mainNode, onExceptionNode, lazy, exceptionClass);
     }
 
   }

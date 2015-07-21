@@ -46,7 +46,7 @@ abstract class RefreshRunnable implements Runnable {
 
       try {
         work();
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         synchronized (this) {
           runnableFuture = null;
           isUpdating = false;

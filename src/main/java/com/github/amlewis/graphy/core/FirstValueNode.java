@@ -5,15 +5,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by amlewis on 7/15/15.
  */
-public final class FirstValueNode<ResultType> extends BaseNode<ResultType> {
-  public static <ResultType> FirstValueNode<ResultType> wrap(BaseNode<ResultType> child) {
-    return new FirstValueNode<>(child);
+public final class FirstValueNode<ResultType> extends Node<ResultType> {
+  public static <ResultType> FirstValueNode<ResultType> wrap(Node<ResultType> child) {
+    return new FirstValueNode<ResultType>(child);
   }
 
-  private BaseNode<ResultType> child;
+  private Node<ResultType> child;
   private AtomicBoolean resultSet = new AtomicBoolean(false);
 
-  public FirstValueNode(BaseNode<ResultType> child) {
+  public FirstValueNode(Node<ResultType> child) {
     this.child = child;
   }
 
@@ -24,7 +24,7 @@ public final class FirstValueNode<ResultType> extends BaseNode<ResultType> {
   }
 
   @Override
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     if (!resultSet.get()) {
       NodeResult<ResultType> result = child.getResult();
       if (result != null && resultSet.compareAndSet(false, true)) {

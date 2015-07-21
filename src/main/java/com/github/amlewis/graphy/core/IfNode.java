@@ -34,7 +34,7 @@ public final class IfNode<ResultType> extends ProcessingNode<ResultType> {
   }
 
   @Override
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     update();
   }
 

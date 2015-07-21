@@ -1,17 +1,13 @@
 package com.github.amlewis.graphy.core;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created by amlewis on 7/12/15.
  */
-abstract class BaseNode<ResultType> {
-  private final Set<BaseNode<?>> parents = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<BaseNode<?>, Boolean>()));
+abstract class Node<ResultType> {
+  private final Set<Node<?>> parents = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<Node<?>, Boolean>()));
   private NodeResult<ResultType> result = null;
 
   public ResultType get() {
@@ -34,7 +30,7 @@ abstract class BaseNode<ResultType> {
   private AtomicBoolean isActive = new AtomicBoolean(false);
 
   // TODO: Race conditions between activate and deactivate!
-  void activate(BaseNode<?> activator) {
+  void activate(Node<?> activator) {
     if (activator != null) {
       parents.add(activator);
     }
@@ -45,7 +41,7 @@ abstract class BaseNode<ResultType> {
 
   protected abstract void activate();
 
-  void deactivate(BaseNode<?> deactivator) {
+  void deactivate(Node<?> deactivator) {
     parents.remove(deactivator);
 //    if (parents.isEmpty() && isActive.compareAndSet(true, false)) {
 //      deactivate();
@@ -54,7 +50,7 @@ abstract class BaseNode<ResultType> {
 
   //protected abstract void deactivate();
 
-  abstract void onDependencyUpdated(BaseNode<?> dependency);
+  abstract void onDependencyUpdated(Node<?> dependency);
 
   void setResult(NodeResult<ResultType> result) {
     if (this.result != result && (this.result == null || !this.result.equals(result))) {
@@ -81,13 +77,13 @@ abstract class BaseNode<ResultType> {
   private class NotifyParentsRunnable extends RefreshRunnable {
     @Override
     public void work() {
-      Iterator<BaseNode<?>> parentsIterator = new ArrayList<BaseNode<?>>(parents).iterator();
+      Iterator<Node<?>> parentsIterator = new ArrayList<Node<?>>(parents).iterator();
       while (parentsIterator.hasNext()) {
-        final BaseNode<?> parent = parentsIterator.next();
+        final Node<?> parent = parentsIterator.next();
         Graphy.getInstance().getGraphyExecutorService().execute(new Runnable() {
           @Override
           public void run() {
-            parent.onDependencyUpdated(BaseNode.this);
+            parent.onDependencyUpdated(Node.this);
           }
         });
       }

@@ -14,10 +14,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class StateNodeTest {
   private static class AddNode extends StateNode<Integer> {
-    private final BaseNode<Integer> left;
-    private final BaseNode<Integer> right;
+    private final Node<Integer> left;
+    private final Node<Integer> right;
 
-    public AddNode(BaseNode<Integer> left, BaseNode<Integer> right) {
+    public AddNode(Node<Integer> left, Node<Integer> right) {
       super(left, right);
       this.left = left;
       this.right = right;
@@ -60,8 +60,8 @@ public class StateNodeTest {
 
     final int FIB_NUMBER = 20;
     AddNode sum = null;
-    BaseNode<Integer> minus2 = first;
-    BaseNode<Integer> minus1 = second;
+    Node<Integer> minus2 = first;
+    Node<Integer> minus1 = second;
     for (int i = 1; i < FIB_NUMBER; ++i) {
       sum = new AddNode(minus1, minus2);
       minus2 = minus1;

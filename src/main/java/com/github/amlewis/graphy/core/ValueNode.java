@@ -3,7 +3,7 @@ package com.github.amlewis.graphy.core;
 /**
  * Created by amlewis on 7/10/15.
  */
-public class ValueNode<ValueType> extends BaseNode<ValueType> {
+public class ValueNode<ValueType> extends Node<ValueType> {
   public static <ResultType> ValueNode<ResultType> of(ResultType value) {
     return new ValueNode<ResultType>(value);
   }
@@ -42,7 +42,7 @@ public class ValueNode<ValueType> extends BaseNode<ValueType> {
   }
 
   @Override
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     // No dependencies. Probably won't ever be called?
   }
 }

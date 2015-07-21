@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by amlewis on 7/13/15.
  */
-abstract class ProcessingNode<ResultType> extends BaseNode<ResultType> {
+abstract class ProcessingNode<ResultType> extends Node<ResultType> {
   private ExecutorService executorService = null;
 
   private final ProcessingNodeRunnable processingNodeRunnable = new ProcessingNodeRunnable();
@@ -33,7 +33,7 @@ abstract class ProcessingNode<ResultType> extends BaseNode<ResultType> {
    * @param dependency
    */
   @Override
-  abstract void onDependencyUpdated(BaseNode<?> dependency);
+  abstract void onDependencyUpdated(Node<?> dependency);
 
   /**
    * Process is guaranteed to run at least once after each invocation of update(). Process should call setResult() when

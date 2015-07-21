@@ -8,14 +8,14 @@ public final class TransformNode<ResultType, InputType> extends StateNode<Result
     ResultType apply(InputType input);
   }
 
-  public static <ResultType, InputType> TransformNode<ResultType, InputType> of(Function<ResultType, InputType> transform, BaseNode<InputType> nodeToTransform) {
+  public static <ResultType, InputType> TransformNode<ResultType, InputType> of(Function<ResultType, InputType> transform, Node<InputType> nodeToTransform) {
     return new TransformNode<ResultType, InputType>(transform, nodeToTransform);
   }
 
   private Function<ResultType, InputType> transform;
-  private BaseNode<InputType> nodeToTransform;
+  private Node<InputType> nodeToTransform;
 
-  public TransformNode(Function<ResultType, InputType> transform, BaseNode<InputType> nodeToTransform) {
+  public TransformNode(Function<ResultType, InputType> transform, Node<InputType> nodeToTransform) {
     this.transform = transform;
     this.nodeToTransform = nodeToTransform;
   }

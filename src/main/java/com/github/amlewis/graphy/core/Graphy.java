@@ -40,39 +40,39 @@ public class Graphy {
   }
 
   // Sinking Nodes
-  public static <ResultType> void sink(BaseNode<ResultType> node, SinkCallback<ResultType> callback) {
-    new SinkNode<>(node, callback);
+  public static <ResultType> void sink(Node<ResultType> node, SinkCallback<ResultType> callback) {
+    new SinkNode<ResultType>(node, callback);
   }
 
-  public static <ResultType> Future<ResultType> sinkFirstResultFuture(BaseNode<ResultType> node) {
-    SinkCallback.FutureSinkCallback<ResultType> futureSinkCallback = new SinkCallback.FutureSinkCallback<>();
+  public static <ResultType> Future<ResultType> sinkFirstResultFuture(Node<ResultType> node) {
+    SinkCallback.FutureSinkCallback<ResultType> futureSinkCallback = new SinkCallback.FutureSinkCallback<ResultType>();
     SinkNode.sink(FirstValueNode.wrap(node), futureSinkCallback);
     return futureSinkCallback;
   }
 
-  public static <ResultType> ResultType sinkFirstResult(BaseNode<ResultType> node) throws ExecutionException, InterruptedException {
+  public static <ResultType> ResultType sinkFirstResult(Node<ResultType> node) throws ExecutionException, InterruptedException {
     return sinkFirstResultFuture(node).get();
   }
 
-  public static <ResultType> ResultType sinkFirstResult(BaseNode<ResultType> node, long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
+  public static <ResultType> ResultType sinkFirstResult(Node<ResultType> node, long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
     return sinkFirstResultFuture(node).get(timeout, unit);
   }
 
-  public static <ResultType> BlockingDeque<NodeResult<ResultType>> sinkToBlockingDeque(BaseNode<ResultType> node, int capacity) {
+  public static <ResultType> BlockingDeque<NodeResult<ResultType>> sinkToBlockingDeque(Node<ResultType> node, int capacity) {
     Graphy.SinkLinkedBlockingDeque<ResultType> queueSink = new Graphy.SinkLinkedBlockingDeque<ResultType>(capacity);
     Graphy.sink(node, queueSink.getCallback());
     return queueSink;
   }
 
   private static final class SinkNode<ResultType> extends ProcessingNode<Void> {
-    public static <ResultType> void sink(BaseNode<ResultType> nodeToSink, SinkCallback<ResultType> callback) {
-      new SinkNode<>(nodeToSink, callback);
+    public static <ResultType> void sink(Node<ResultType> nodeToSink, SinkCallback<ResultType> callback) {
+      new SinkNode<ResultType>(nodeToSink, callback);
     }
 
-    private BaseNode<ResultType> nodeToSink;
+    private Node<ResultType> nodeToSink;
     private SinkCallback<ResultType> callback;
 
-    public SinkNode(BaseNode<ResultType> nodeToSink, SinkCallback<ResultType> callback) {
+    public SinkNode(Node<ResultType> nodeToSink, SinkCallback<ResultType> callback) {
       this.nodeToSink = nodeToSink;
       this.callback = callback;
       this.callback.addRef(this);
@@ -87,12 +87,12 @@ public class Graphy {
     }
 
     @Override
-    void activate(BaseNode<?> activator) {
+    void activate(Node<?> activator) {
       throw new UnsupportedOperationException("Cannot have nodes that depend on Sink Nodes!");
     }
 
     @Override
-    void onDependencyUpdated(BaseNode<?> dependency) {
+    void onDependencyUpdated(Node<?> dependency) {
       update();
     }
 
@@ -126,7 +126,7 @@ public class Graphy {
    */
   public abstract static class SinkCallback<ResultType> {
     // Keeps strong references to sink nodes so they don't get cleaned up.
-    private AtomicReference<SinkNode<ResultType>> nodeRef = new AtomicReference<>(null);
+    private AtomicReference<SinkNode<ResultType>> nodeRef = new AtomicReference<SinkNode<ResultType>>(null);
 
     void addRef(SinkNode<ResultType> node) {
       if (!nodeRef.compareAndSet(null, node)) {
@@ -148,7 +148,7 @@ public class Graphy {
     }
 
     static class FutureSinkCallback<ResultType> extends SinkCallback<ResultType> implements Future<ResultType> {
-      private ArrayBlockingQueue<NodeResult<ResultType>> resultQueue = new ArrayBlockingQueue<>(1);
+      private ArrayBlockingQueue<NodeResult<ResultType>> resultQueue = new ArrayBlockingQueue<NodeResult<ResultType>>(1);
       private AtomicBoolean cancelled = new AtomicBoolean(false);
 
       @Override

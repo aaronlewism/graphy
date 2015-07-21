@@ -6,10 +6,10 @@ package com.github.amlewis.graphy.core;
  * Lightweight Node to wrap a tree of nodes as a single node. If you want to create a re-usuable graph where you only
  * alter a couple of leaf dependencies, you should use this node to wrap your graph structure.
  */
-public abstract class TreeNode<ResultType> extends BaseNode<ResultType> {
-  private BaseNode<ResultType> root;
+public abstract class TreeNode<ResultType> extends Node<ResultType> {
+  private Node<ResultType> root;
 
-  public TreeNode(BaseNode<ResultType> root) {
+  public TreeNode(Node<ResultType> root) {
     this.root = root;
   }
 
@@ -19,7 +19,7 @@ public abstract class TreeNode<ResultType> extends BaseNode<ResultType> {
   }
 
   @Override
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     setResult(root.getResult());
   }
 }

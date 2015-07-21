@@ -1,45 +1,40 @@
 package com.github.amlewis.graphy.core;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by amlewis on 7/10/15.
  */
 public abstract class StateNode<ResultType> extends ProcessingNode<ResultType> {
-  private final Set<BaseNode<?>> dependencies;
-  private final Set<BaseNode<?>> unreadyDependencies;
-  private final Set<BaseNode<?>> exceptionalDependencies;
+  private final Set<Node<?>> dependencies;
+  private final Set<Node<?>> unreadyDependencies;
+  private final Set<Node<?>> exceptionalDependencies;
 
-  public StateNode(BaseNode<?>... dependencies) {
-    this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
-    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
-    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
-    for (BaseNode<?> node : dependencies) {
+  public StateNode(Node<?>... dependencies) {
+    this.dependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
+    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
+    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
+    for (Node<?> node : dependencies) {
       this.dependencies.add(node);
     }
   }
 
-  public StateNode(Collection<BaseNode<?>> dependencies) {
+  public StateNode(Collection<Node<?>> dependencies) {
     int size = dependencies.size();
-    this.dependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
-    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
-    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<BaseNode<?>>());
+    this.dependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
+    this.unreadyDependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
+    this.exceptionalDependencies = Collections.synchronizedSet(new HashSet<Node<?>>());
     this.dependencies.addAll(dependencies);
   }
 
   public void activate() {
     // TODO: Wasteful
-    for (BaseNode<?> dependency : dependencies) {
+    for (Node<?> dependency : dependencies) {
       dependency.activate(this);
       unreadyDependencies.add(dependency);
     }
 
-    for (BaseNode<?> dependency : dependencies) {
+    for (Node<?> dependency : dependencies) {
       onDependencyUpdated(dependency);
     }
   }
@@ -57,7 +52,7 @@ public abstract class StateNode<ResultType> extends ProcessingNode<ResultType> {
     }
 
     if (!shouldCancel()) {
-      if (exception != null && exception instanceof BaseNode.NodeNotProcessedException) {
+      if (exception != null && exception instanceof Node.NodeNotProcessedException) {
         setResult((NodeResult<ResultType>) null);
       } else if (exception != null && exceptionalDependencies.isEmpty()) {
         setResult(exception);
@@ -73,7 +68,7 @@ public abstract class StateNode<ResultType> extends ProcessingNode<ResultType> {
    */
   protected abstract ResultType processResult() throws Exception;
 
-  void onDependencyUpdated(BaseNode<?> dependency) {
+  void onDependencyUpdated(Node<?> dependency) {
     if (dependencies.contains(dependency)) {
       NodeResult<?> dependencyResult = dependency.getResult();
       if (dependencyResult != null) {
